@@ -1,0 +1,6 @@
+{
+  "name": "midify",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "File-to-MIDI steganography application"
+}

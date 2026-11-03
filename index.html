@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Midify</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body class="xai-theme studio-dark">
+  <header class="studio-header">
+    <div class="logo-group">
+      <div class="logo-text">
+        <h1 class="brand-wordmark">Midify</h1>
+        <span class="subtitle">Embed files in MIDI tracks</span>
+      </div>
+    </div>
+
+    <div class="header-badges">
+      <span class="tech-badge">Format 0 480 PPQ</span>
+      <span class="tech-badge">Deflate</span>
+      <span class="tech-badge">Pentatonic Carrier</span>
+    </div>
+  </header>
+
+  <main class="studio-workspace">
+    <section class="studio-card card-encoder">
+      <div class="card-header">
+        <span class="eyebrow-mono">Carrier Encoder</span>
+        <h2 class="display-headline">Encode</h2>
+      </div>
+
+      <div id="encode-dropzone" class="dropzone">
+        <input type="file" id="encode-file-input" class="file-input">
+        <div class="dropzone-content">
+          <div class="drop-icon">
+            <img src="icons/upload_file.svg" class="icon icon-lg" alt="">
+          </div>
+          <p class="drop-title">Drop file here or browse</p>
+        </div>
+        <div id="encode-file-pill" class="file-selected-pill hidden">
+          <span class="pill-name" id="enc-filename">filename.png</span>
+          <span class="pill-badge" id="enc-filesize">0 KB</span>
+        </div>
+      </div>
+
+      <div class="telemetry-grid">
+        <div class="telemetry-item">
+          <span class="label">Original size</span>
+          <span class="value" id="enc-orig-size">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Compressed size</span>
+          <span class="value" id="enc-comp-size">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">MIDI notes</span>
+          <span class="value" id="enc-note-count">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Duration</span>
+          <span class="value" id="enc-duration">None</span>
+        </div>
+      </div>
+
+      <div class="hash-section">
+        <div class="hash-header">
+          <span class="label">Original SHA 256</span>
+          <button id="btn-copy-enc-hash" class="btn-copy" title="Copy Hash" disabled>
+            <img src="icons/content_copy.svg" class="icon icon-sm" alt="">
+            <span class="btn-copy-label">Copy</span>
+          </button>
+        </div>
+        <div class="hash-display monospace" id="enc-hash-display">None</div>
+      </div>
+
+      <div class="card-actions">
+        <button id="btn-play-encoded" class="btn btn-action" disabled>
+          <img src="icons/play_arrow.svg" class="icon icon-md" alt="">
+          Play in visualizer
+        </button>
+        <button id="btn-download-mid" class="btn btn-action" disabled>
+          <img src="icons/download.svg" class="icon icon-md" alt="">
+          Download .mid
+        </button>
+        <button id="btn-send-to-decoder" class="btn btn-action btn-highlight btn-full" disabled>
+          Send to decoder
+          <img src="icons/arrow_forward.svg" class="icon icon-sm" alt="">
+        </button>
+      </div>
+    </section>
+
+    <section class="studio-card card-visualizer">
+      <div class="card-header visualizer-header">
+        <div class="header-left">
+          <span class="eyebrow-mono">Piano Roll</span>
+          <h2 class="display-headline">Visualizer</h2>
+        </div>
+        <div class="status-indicator">
+          <span class="status-dot" id="playback-dot"></span>
+          <span class="status-label" id="playback-status">Idle</span>
+        </div>
+      </div>
+
+      <div class="canvas-container">
+        <canvas id="midi-canvas" width="800" height="420"></canvas>
+      </div>
+
+      <div class="progress-section">
+        <div id="progress-bar-container" class="progress-track" title="Click to seek">
+          <div id="progress-bar-fill" class="progress-fill"></div>
+        </div>
+      </div>
+
+      <div class="player-controls">
+        <div class="primary-controls">
+          <button id="btn-play-pause" class="btn btn-control btn-highlight" disabled>
+            <img id="play-pause-icon" src="icons/play_arrow.svg" class="icon icon-md" alt="">
+            <span id="play-pause-text">Play</span>
+          </button>
+          <button id="btn-stop" class="btn btn-control" disabled>
+            <img src="icons/stop.svg" class="icon icon-sm" alt="">
+            Stop
+          </button>
+        </div>
+
+        <div class="speed-selector">
+          <span class="speed-label">Speed</span>
+          <div class="segmented-control">
+            <button class="btn-speed active" data-speed="1">1x</button>
+            <button class="btn-speed" data-speed="4">4x</button>
+            <button class="btn-speed" data-speed="10">10x</button>
+          </div>
+        </div>
+
+        <div class="time-readout monospace">
+          <span id="time-current">00:00</span> / <span id="time-total">00:00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="studio-card card-decoder">
+      <div class="card-header">
+        <span class="eyebrow-mono">Carrier Decoder</span>
+        <h2 class="display-headline">Decode</h2>
+      </div>
+
+      <div id="decode-dropzone" class="dropzone">
+        <input type="file" id="decode-file-input" accept=".mid,.midi" class="file-input">
+        <div class="dropzone-content">
+          <div class="drop-icon">
+            <img src="icons/audio_file.svg" class="icon icon-lg" alt="">
+          </div>
+          <p class="drop-title">Drop .mid file here or browse</p>
+        </div>
+        <div id="decode-file-pill" class="file-selected-pill hidden">
+          <span class="pill-name" id="dec-pill-name">carrier.mid</span>
+          <span class="pill-badge" id="dec-pill-size">0 KB</span>
+        </div>
+      </div>
+
+      <div class="match-badge-container">
+        <div id="badge-match" class="badge-match hidden">
+          <img src="icons/verified.svg" class="icon icon-sm" alt="">
+          <span class="badge-text">SHA 256 match verified</span>
+        </div>
+        <div id="badge-musical-midi" class="badge-musical hidden">
+          <span class="musical-badge-dot"></span>
+          <span class="badge-text monospace">Standard MIDI song</span>
+        </div>
+      </div>
+
+      <div class="telemetry-grid">
+        <div class="telemetry-item">
+          <span class="label">Target</span>
+          <span class="value" id="dec-filename">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Size / Duration</span>
+          <span class="value" id="dec-size">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Key signature</span>
+          <span class="value" id="dec-key">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Instruments</span>
+          <span class="value" id="dec-instruments">None</span>
+        </div>
+        <div class="telemetry-item">
+          <span class="label">Polyphony</span>
+          <span class="value" id="dec-polyphony">None</span>
+        </div>
+      </div>
+
+      <div class="hash-section">
+        <div class="hash-header">
+          <span class="label">Recovered SHA 256</span>
+          <button id="btn-copy-dec-hash" class="btn-copy" title="Copy Hash" disabled>
+            <img src="icons/content_copy.svg" class="icon icon-sm" alt="">
+            <span class="btn-copy-label">Copy</span>
+          </button>
+        </div>
+        <div class="hash-display monospace" id="dec-hash-display">None</div>
+      </div>
+
+      <div class="preview-section">
+        <div class="preview-header">
+          <span class="label">Preview</span>
+          <span class="preview-type-badge" id="preview-type">None</span>
+        </div>
+        <div id="preview-container" class="preview-container">
+          <div id="preview-empty" class="preview-placeholder">No payload extracted</div>
+          <img id="preview-image" class="preview-image hidden" alt="Extracted Payload Preview">
+          <pre id="preview-text" class="preview-text monospace hidden"></pre>
+          <div id="preview-hex" class="preview-hex monospace hidden"></div>
+        </div>
+      </div>
+
+      <div class="conversion-section">
+        <div class="conversion-header">
+          <span class="label">Format conversion</span>
+          <span class="conversion-status monospace" id="conversion-status">Standby</span>
+        </div>
+        <div class="conversion-buttons">
+          <button id="btn-export-wav" class="btn btn-conversion" disabled title="Render 16-bit 44.1kHz WAV audio">
+            <img src="icons/audio_file.svg" class="icon icon-sm" alt="">
+            Export .WAV
+          </button>
+          <button id="btn-export-json" class="btn btn-conversion" disabled title="Export note events to JSON">
+            <img src="icons/download.svg" class="icon icon-sm" alt="">
+            Export .JSON
+          </button>
+          <button id="btn-export-csv" class="btn btn-conversion" disabled title="Export note events to CSV">
+            <img src="icons/download.svg" class="icon icon-sm" alt="">
+            Export .CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button id="btn-download-recovered" class="btn btn-action btn-highlight btn-full" disabled>
+          <img src="icons/download.svg" class="icon icon-md" alt="">
+          Download file
+        </button>
+        <button id="btn-play-song" class="btn btn-action btn-full hidden">
+          <img src="icons/play_arrow.svg" class="icon icon-md" alt="">
+          Play song in visualizer
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="app.js?v=4"></script>
+</body>
+</html>
