@@ -281,26 +281,33 @@ function updatePlayerUI() {
   $('progress-bar-fill').style.width = `${progressRatio * 100}%`;
 
   const playPauseIcon = $('play-pause-icon');
+  function setPlayPauseIcon(isPlaying) {
+    if (!playPauseIcon) return;
+    if ('src' in playPauseIcon && playPauseIcon.src) {
+      const target = isPlaying ? PAUSE_ICON_SRC : PLAY_ICON_SRC;
+      if (!playPauseIcon.src.endsWith(target)) playPauseIcon.src = target;
+    } else {
+      const targetHtml = isPlaying
+        ? '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>'
+        : '<polygon points="6 4 20 12 6 20 6 4"/>';
+      if (playPauseIcon.innerHTML !== targetHtml) playPauseIcon.innerHTML = targetHtml;
+    }
+  }
+
   if (p.isPlaying) {
     $('playback-dot').classList.add('playing');
     $('playback-status').textContent = 'PLAYING';
-    if (playPauseIcon && !playPauseIcon.src.endsWith(PAUSE_ICON_SRC)) {
-      playPauseIcon.src = PAUSE_ICON_SRC;
-    }
+    setPlayPauseIcon(true);
     $('play-pause-text').textContent = 'Pause';
   } else if (p.notes.length > 0) {
     $('playback-dot').classList.remove('playing');
     $('playback-status').textContent = p.currentTime > 0 ? 'PAUSED' : 'READY';
-    if (playPauseIcon && !playPauseIcon.src.endsWith(PLAY_ICON_SRC)) {
-      playPauseIcon.src = PLAY_ICON_SRC;
-    }
+    setPlayPauseIcon(false);
     $('play-pause-text').textContent = 'Play';
   } else {
     $('playback-dot').classList.remove('playing');
     $('playback-status').textContent = 'IDLE';
-    if (playPauseIcon && !playPauseIcon.src.endsWith(PLAY_ICON_SRC)) {
-      playPauseIcon.src = PLAY_ICON_SRC;
-    }
+    setPlayPauseIcon(false);
     $('play-pause-text').textContent = 'Play';
   }
 
@@ -359,7 +366,7 @@ function init() {
   }
   requestAnimationFrame(uiLoop);
 
-  // Deck A: File Drop and Encoders
+  // File encoding
   setupDropzone($('encode-dropzone'), $('encode-file-input'), processEncodeFile);
 
   $('btn-copy-enc-hash').addEventListener('click', () => {
@@ -394,7 +401,7 @@ function init() {
     }
   });
 
-  // Transport Controls
+  // Playback transport
   $('btn-play-pause').addEventListener('click', () => {
     if (state.player.isPlaying) {
       state.player.pause();
@@ -424,7 +431,7 @@ function init() {
     updatePlayerUI();
   });
 
-  // Deck B: File Drop and Decoders
+  // MIDI decoding
   $('btn-play-song')?.addEventListener('click', () => {
     if (state.parsedMidiSong) {
       state.player.loadMidiSong(state.parsedMidiSong);
@@ -460,13 +467,13 @@ function init() {
     }
   });
 
-  // Format Conversion Actions
+  // Format exports
   $('btn-export-wav')?.addEventListener('click', async () => {
     if (!state.parsedMidiSong || state.parsedMidiSong.notes.length === 0) return;
     const btn = $('btn-export-wav');
     const originalText = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<img src="icons/audio_file.svg" class="icon icon-sm" alt=""><span>Rendering WAV...</span>`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg><span>Rendering WAV...</span>`;
     try {
       const wavBytes = await renderNotesToWav(
         state.parsedMidiSong.notes,

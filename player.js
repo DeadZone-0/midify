@@ -1,9 +1,9 @@
 import { PITCH_TABLE, VELOCITY_TABLE } from './midi.js';
 
-// xAI token-matched velocity palette: Dusk Purple -> Breeze Blue -> Twilight -> Sunset Soft -> Sunset Orange -> White
+// Acoustic velocity intensity ramp: pianissimo (deep amber) through fortissimo (radiant ivory)
 export const VELOCITY_COLORS = Object.freeze([
-  '#7c3aed', '#a0c3ec', '#c4b5fd', '#ffc285',
-  '#ff9e42', '#ff7a17', '#ffffff', '#ffffff',
+  '#b45309', '#d97706', '#f59e0b', '#fbbf24',
+  '#fcd34d', '#fde68a', '#fef08a', '#ffffff',
 ]);
 
 const PITCH_SCALE = ['C', 'D', 'E', 'G', 'A'];
@@ -21,7 +21,7 @@ function drawPill(ctx, x, y, w, h, r = 3) {
   }
 }
 
-// ponytail: Cache a 1-second white noise buffer on the AudioContext for drum/percussion synthesis.
+// Cache a 1-second white noise buffer on the AudioContext for drum/percussion synthesis.
 function getNoiseBuffer(ctx) {
   if (ctx._noiseBuffer) return ctx._noiseBuffer;
   const buffer = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
@@ -31,7 +31,7 @@ function getNoiseBuffer(ctx) {
   return buffer;
 }
 
-// ponytail: Synthesize 128 GM instruments into 8 native oscillator/filter profiles with zero audio files.
+// Synthesize 128 GM instruments into 8 native oscillator/filter profiles with zero audio files.
 export function playSynthVoice(ctx, dest, pitch, velocity, program = 0, channel = 0, duration = 0.2, now = ctx.currentTime) {
   const isDrum = channel === 9 || program === 128;
   const peak = Math.max(0.01, (velocity / 128) * 0.22);
@@ -412,22 +412,22 @@ export class MidiVisualizerPlayer {
     }
 
     if (keyWidth >= 16) {
-      ctx.font = '9px "Geist Mono", "JetBrains Mono", monospace';
+      ctx.font = '10px "IBM Plex Mono", ui-monospace, monospace';
       ctx.textAlign = 'center';
     }
 
     for (let i = 0; i < 32; i++) {
       const x = i * keyWidth;
       const active = this.activeKeys[i];
-      const activeAlpha = active ? Math.max(0, 1 - (now - active.time) / 160) : 0;
+      const activeAlpha = active ? Math.max(0, 1 - (now - active.time) / 180) : 0;
       const color = active ? VELOCITY_COLORS[active.velocityIndex] : '#ffffff';
 
-      ctx.fillStyle = '#141414';
+      ctx.fillStyle = '#14151a';
       ctx.fillRect(x + 1, keyY, keyWidth - 2, keyHeight);
 
       if (activeAlpha > 0) {
         ctx.fillStyle = color;
-        ctx.globalAlpha = activeAlpha * 0.75;
+        ctx.globalAlpha = activeAlpha * 0.85;
         ctx.fillRect(x + 1, keyY, keyWidth - 2, keyHeight);
 
         ctx.fillStyle = '#ffffff';
@@ -436,60 +436,18 @@ export class MidiVisualizerPlayer {
         ctx.globalAlpha = 1.0;
       }
 
-      ctx.strokeStyle = activeAlpha > 0 ? color : '#212327';
+      ctx.strokeStyle = activeAlpha > 0 ? color : '#242732';
       ctx.strokeRect(x + 0.5, keyY + 0.5, keyWidth - 1, keyHeight - 1);
 
       if (keyWidth >= 16) {
-        ctx.fillStyle = activeAlpha > 0 ? '#ffffff' : '#7d8187';
+        ctx.fillStyle = activeAlpha > 0 ? '#ffffff' : '#737887';
         ctx.fillText(PITCH_NAMES[i], x + keyWidth / 2, keyY + keyHeight - 8);
       }
     }
-
-    this._drawHUD(ctx);
   }
 
-  _drawHUD(ctx) {
-    const note = this.currentNote;
-    const x = 16, y = 16, w = 260, h = 110, pad = 12;
-
-    ctx.save();
-    ctx.fillStyle = '#191919';
-    ctx.strokeStyle = '#212327';
-    ctx.lineWidth = 1;
-
-    drawPill(ctx, x, y, w, h, 8);
-    ctx.stroke();
-
-    ctx.font = '11px "Geist Mono", monospace';
-    ctx.fillStyle = '#7d8187';
-    ctx.fillText('MIDIFY MONITOR', x + pad, y + 20);
-
-    if (!note) {
-      ctx.fillStyle = '#7d8187';
-      ctx.fillText('Status: Ready', x + pad, y + 42);
-      ctx.fillText(`Loaded: ${this.notes.length} notes`, x + pad, y + 62);
-      ctx.fillText(`Speed:  ${this.speed}x`, x + pad, y + 82);
-      ctx.restore();
-      return;
-    }
-
-    const pitch5Bit = note.pitchIndex.toString(2).padStart(5, '0');
-    const vel3Bit = note.velocityIndex.toString(2).padStart(3, '0');
-    const hexByte = '0x' + note.byte.toString(16).toUpperCase().padStart(2, '0');
-    const isPrintable = note.byte >= 32 && note.byte <= 126;
-    const asciiChar = isPrintable ? `'${String.fromCharCode(note.byte)}'` : '·';
-
-    ctx.fillStyle = '#dadbdf';
-    ctx.fillText(`NOTE:  ${note.index + 1} / ${this.notes.length}`, x + pad, y + 38);
-
-    ctx.fillStyle = VELOCITY_COLORS[note.velocityIndex];
-    ctx.fillText(`PITCH: ${pitch5Bit} (${PITCH_NAMES[note.pitchIndex]})`, x + pad, y + 56);
-    ctx.fillText(`VEL:   ${vel3Bit} (Lvl ${note.velocity})`, x + pad, y + 74);
-
-    ctx.fillStyle = '#ffc285';
-    ctx.fillText(`BYTE:  ${hexByte}   ASCII: ${asciiChar}`, x + pad, y + 92);
-
-    ctx.restore();
+  _drawHUD(_ctx) {
+    // Canvas HUD removed in favor of integrated hardware transport monitor in DOM.
   }
 }
 

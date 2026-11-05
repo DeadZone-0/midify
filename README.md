@@ -23,3 +23,7 @@ python3 server.py 8000
 Then navigate to http://127.0.0.1:8000 in your browser.
 
 The whole project runs on the client side in modern browsers without any build process or npm packages.
+
+
+AI usage - 
+not much i have used ai in creating the player cuz...idk how to tbh later i modified some of it i have also used ai in some other stuff too where i cant understand what to do and in creating the svg ( its dumb but yea i wanna try how it comes) ,  too poor to afford a subscription so used web...ahm
