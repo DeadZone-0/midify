@@ -79,9 +79,9 @@ async function processEncodeFile(file) {
     const arrayBuffer = await file.arrayBuffer();
     state.originalBytes = new Uint8Array(arrayBuffer);
 
-    $('enc-filename').textContent = file.name;
-    $('enc-filesize').textContent = formatBytes(state.originalBytes.length);
-    $('encode-file-pill').classList.remove('hidden');
+    if ($('enc-filename')) $('enc-filename').textContent = file.name;
+    if ($('enc-filesize')) $('enc-filesize').textContent = formatBytes(state.originalBytes.length);
+    $('encode-file-pill')?.classList.remove('hidden');
 
     state.packedBytes = await packFile(file.name, state.originalBytes);
     state.originalHash = state.packedBytes.hash;
@@ -93,20 +93,20 @@ async function processEncodeFile(file) {
     const compressionRatio = ((packedLen / origLen) * 100).toFixed(1);
     const songDurationSeconds = state.packedBytes.length * 0.055;
 
-    $('enc-orig-size').textContent = formatBytes(origLen);
-    $('enc-comp-size').textContent = isCompressed
+    if ($('enc-orig-size')) $('enc-orig-size').textContent = formatBytes(origLen);
+    if ($('enc-comp-size')) $('enc-comp-size').textContent = isCompressed
       ? `${formatBytes(packedLen)} (${compressionRatio}% • Deflate)`
       : `${formatBytes(packedLen)} (Uncompressed)`;
-    $('enc-note-count').textContent = `${state.packedBytes.length.toLocaleString()} notes`;
-    $('enc-duration').textContent = `${formatTime(songDurationSeconds)} @ 1x`;
-    $('enc-hash-display').textContent = state.originalHash;
+    if ($('enc-note-count')) $('enc-note-count').textContent = `${state.packedBytes.length.toLocaleString()} notes`;
+    if ($('enc-duration')) $('enc-duration').textContent = `${formatTime(songDurationSeconds)} @ 1x`;
+    if ($('enc-hash-display')) $('enc-hash-display').textContent = state.originalHash;
 
-    $('btn-copy-enc-hash').disabled = false;
-    $('btn-download-mid').disabled = false;
-    $('btn-play-encoded').disabled = false;
-    $('btn-send-to-decoder').disabled = false;
+    if ($('btn-copy-enc-hash')) $('btn-copy-enc-hash').disabled = false;
+    if ($('btn-download-mid')) $('btn-download-mid').disabled = false;
+    if ($('btn-play-encoded')) $('btn-play-encoded').disabled = false;
+    if ($('btn-send-to-decoder')) $('btn-send-to-decoder').disabled = false;
 
-    state.player.load(state.packedBytes);
+    state.player?.load(state.packedBytes);
     updatePlayerUI();
   } catch (err) {
     console.error('File encoding error:', err);
@@ -116,9 +116,9 @@ async function processEncodeFile(file) {
 
 async function processDecodeMidi(midiFileBytes, filename = 'carrier.mid') {
   state.activeMidiFilename = filename;
-  $('dec-pill-name').textContent = filename;
-  $('dec-pill-size').textContent = formatBytes(midiFileBytes.length);
-  $('decode-file-pill').classList.remove('hidden');
+  if ($('dec-pill-name')) $('dec-pill-name').textContent = filename;
+  if ($('dec-pill-size')) $('dec-pill-size').textContent = formatBytes(midiFileBytes.length);
+  $('decode-file-pill')?.classList.remove('hidden');
 
   try {
     const parsed = parseMidiFile(midiFileBytes);
@@ -200,9 +200,9 @@ async function processDecodeMidi(midiFileBytes, filename = 'carrier.mid') {
 }
 
 function renderMusicalMidiPreview(filename, parsed) {
-  $('preview-empty').classList.add('hidden');
-  $('preview-image').classList.add('hidden');
-  $('preview-hex').classList.add('hidden');
+  $('preview-empty')?.classList.add('hidden');
+  $('preview-image')?.classList.add('hidden');
+  $('preview-hex')?.classList.add('hidden');
 
   const pitchMin = parsed.pitchMin ?? 0;
   const pitchMax = parsed.pitchMax ?? 0;
@@ -235,16 +235,18 @@ function renderMusicalMidiPreview(filename, parsed) {
     `Available exports: 16-bit .WAV audio, .JSON, and .CSV.`
   ].filter(line => line !== undefined).join('\n');
 
-  $('preview-text').textContent = summary;
-  $('preview-text').classList.remove('hidden');
-  $('preview-type').textContent = 'STANDARD MIDI SONG';
+  if ($('preview-text')) {
+    $('preview-text').textContent = summary;
+    $('preview-text').classList.remove('hidden');
+  }
+  if ($('preview-type')) $('preview-type').textContent = 'STANDARD MIDI SONG';
 }
 
 function renderPayloadPreview(filename, data) {
-  $('preview-empty').classList.add('hidden');
-  $('preview-image').classList.add('hidden');
-  $('preview-text').classList.add('hidden');
-  $('preview-hex').classList.add('hidden');
+  $('preview-empty')?.classList.add('hidden');
+  $('preview-image')?.classList.add('hidden');
+  $('preview-text')?.classList.add('hidden');
+  $('preview-hex')?.classList.add('hidden');
 
   const ext = filename.split('.').pop().toLowerCase();
   const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico'];
@@ -253,18 +255,24 @@ function renderPayloadPreview(filename, data) {
   if (imageExts.includes(ext)) {
     const blob = new Blob([data], { type: `image/${ext === 'svg' ? 'svg+xml' : ext}` });
     const url = URL.createObjectURL(blob);
-    $('preview-image').src = url;
-    $('preview-image').onload = () => URL.revokeObjectURL(url);
-    $('preview-image').classList.remove('hidden');
-    $('preview-type').textContent = `IMAGE (${ext.toUpperCase()})`;
+    if ($('preview-image')) {
+      $('preview-image').src = url;
+      $('preview-image').onload = () => URL.revokeObjectURL(url);
+      $('preview-image').classList.remove('hidden');
+    }
+    if ($('preview-type')) $('preview-type').textContent = `IMAGE (${ext.toUpperCase()})`;
   } else if (textExts.includes(ext)) {
-    $('preview-text').textContent = new TextDecoder('utf-8').decode(data);
-    $('preview-text').classList.remove('hidden');
-    $('preview-type').textContent = `TEXT (${ext.toUpperCase()})`;
+    if ($('preview-text')) {
+      $('preview-text').textContent = new TextDecoder('utf-8').decode(data);
+      $('preview-text').classList.remove('hidden');
+    }
+    if ($('preview-type')) $('preview-type').textContent = `TEXT (${ext.toUpperCase()})`;
   } else {
-    $('preview-hex').textContent = createHexDump(data);
-    $('preview-hex').classList.remove('hidden');
-    $('preview-type').textContent = 'HEX DUMP';
+    if ($('preview-hex')) {
+      $('preview-hex').textContent = createHexDump(data);
+      $('preview-hex').classList.remove('hidden');
+    }
+    if ($('preview-type')) $('preview-type').textContent = 'HEX DUMP';
   }
 }
 
@@ -276,12 +284,17 @@ function updatePlayerUI() {
   const totalSec = p.totalDuration;
   const progressRatio = totalSec > 0 ? Math.min(1, currentSec / totalSec) : 0;
 
-  $('time-current').textContent = formatTime(currentSec);
-  $('time-total').textContent = formatTime(totalSec);
-  $('progress-bar-fill').style.width = `${progressRatio * 100}%`;
+  if ($('time-current')) $('time-current').textContent = formatTime(currentSec);
+  if ($('time-total')) $('time-total').textContent = formatTime(totalSec);
+  if ($('progress-bar-fill')) $('progress-bar-fill').style.width = `${progressRatio * 100}%`;
 
   const playPauseIcon = $('play-pause-icon');
+  const playPauseImg = $('play-pause-img');
   function setPlayPauseIcon(isPlaying) {
+    if (playPauseImg) {
+      const targetSrc = isPlaying ? 'assets/handdrawn/stop.webp' : 'assets/handdrawn/play.webp';
+      if (!playPauseImg.src.endsWith(targetSrc)) playPauseImg.src = targetSrc;
+    }
     if (!playPauseIcon) return;
     if ('src' in playPauseIcon && playPauseIcon.src) {
       const target = isPlaying ? PAUSE_ICON_SRC : PLAY_ICON_SRC;
@@ -295,24 +308,24 @@ function updatePlayerUI() {
   }
 
   if (p.isPlaying) {
-    $('playback-dot').classList.add('playing');
-    $('playback-status').textContent = 'PLAYING';
+    $('playback-dot')?.classList.add('playing');
+    if ($('playback-status')) $('playback-status').textContent = 'PLAYING';
     setPlayPauseIcon(true);
-    $('play-pause-text').textContent = 'Pause';
+    if ($('play-pause-text')) $('play-pause-text').textContent = 'Pause';
   } else if (p.notes.length > 0) {
-    $('playback-dot').classList.remove('playing');
-    $('playback-status').textContent = p.currentTime > 0 ? 'PAUSED' : 'READY';
+    $('playback-dot')?.classList.remove('playing');
+    if ($('playback-status')) $('playback-status').textContent = p.currentTime > 0 ? 'PAUSED' : 'READY';
     setPlayPauseIcon(false);
-    $('play-pause-text').textContent = 'Play';
+    if ($('play-pause-text')) $('play-pause-text').textContent = 'Play';
   } else {
-    $('playback-dot').classList.remove('playing');
-    $('playback-status').textContent = 'IDLE';
+    $('playback-dot')?.classList.remove('playing');
+    if ($('playback-status')) $('playback-status').textContent = 'IDLE';
     setPlayPauseIcon(false);
-    $('play-pause-text').textContent = 'Play';
+    if ($('play-pause-text')) $('play-pause-text').textContent = 'Play';
   }
 
-  $('btn-play-pause').disabled = p.notes.length === 0;
-  $('btn-stop').disabled = p.notes.length === 0 || p.currentTime === 0;
+  if ($('btn-play-pause')) $('btn-play-pause').disabled = p.notes.length === 0;
+  if ($('btn-stop')) $('btn-stop').disabled = p.notes.length === 0 || p.currentTime === 0;
 }
 
 function setupDropzone(dropzoneEl, fileInputEl, onFileSelected) {
@@ -358,21 +371,27 @@ function setupDropzone(dropzoneEl, fileInputEl, onFileSelected) {
 }
 
 function init() {
-  state.player = new MidiVisualizerPlayer($('midi-canvas'));
-
-  function uiLoop() {
-    updatePlayerUI();
+  const canvas = $('midi-canvas');
+  if (canvas) {
+    state.player = new MidiVisualizerPlayer(canvas);
+    function uiLoop() {
+      updatePlayerUI();
+      requestAnimationFrame(uiLoop);
+    }
     requestAnimationFrame(uiLoop);
   }
-  requestAnimationFrame(uiLoop);
 
   // File encoding
-  setupDropzone($('encode-dropzone'), $('encode-file-input'), processEncodeFile);
+  const encDrop = $('encode-dropzone');
+  const encInput = $('encode-file-input');
+  if (encDrop && encInput) {
+    setupDropzone(encDrop, encInput, processEncodeFile);
+  }
 
-  $('btn-copy-enc-hash').addEventListener('click', () => {
+  $('btn-copy-enc-hash')?.addEventListener('click', () => {
     if (state.originalHash) {
       navigator.clipboard.writeText(state.originalHash);
-      const label = $('btn-copy-enc-hash').querySelector('.btn-copy-label');
+      const label = $('btn-copy-enc-hash')?.querySelector('.btn-copy-label');
       if (label) {
         label.textContent = 'Copied';
         setTimeout(() => (label.textContent = 'Copy'), 1500);
@@ -380,21 +399,21 @@ function init() {
     }
   });
 
-  $('btn-download-mid').addEventListener('click', () => {
+  $('btn-download-mid')?.addEventListener('click', () => {
     if (state.midiBytes) {
       const base = state.originalFile?.name ? state.originalFile.name.replace(/\.[^/.]+$/, '') : 'carrier';
       downloadBlob(state.midiBytes, `${base}.mid`, 'audio/midi');
     }
   });
 
-  $('btn-play-encoded').addEventListener('click', () => {
+  $('btn-play-encoded')?.addEventListener('click', () => {
     if (state.packedBytes) {
-      state.player.load(state.packedBytes);
-      state.player.play();
+      state.player?.load(state.packedBytes);
+      state.player?.play();
     }
   });
 
-  $('btn-send-to-decoder').addEventListener('click', () => {
+  $('btn-send-to-decoder')?.addEventListener('click', () => {
     if (state.midiBytes) {
       const base = state.originalFile?.name ? state.originalFile.name.replace(/\.[^/.]+$/, '') : 'carrier';
       processDecodeMidi(state.midiBytes, `${base}.mid`);
@@ -402,7 +421,8 @@ function init() {
   });
 
   // Playback transport
-  $('btn-play-pause').addEventListener('click', () => {
+  $('btn-play-pause')?.addEventListener('click', () => {
+    if (!state.player) return;
     if (state.player.isPlaying) {
       state.player.pause();
     } else {
@@ -411,7 +431,8 @@ function init() {
     updatePlayerUI();
   });
 
-  $('btn-stop').addEventListener('click', () => {
+  $('btn-stop')?.addEventListener('click', () => {
+    if (!state.player) return;
     state.player.stop();
     updatePlayerUI();
   });
@@ -420,11 +441,12 @@ function init() {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.btn-speed').forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
-      state.player.setSpeed(btn.getAttribute('data-speed'));
+      state.player?.setSpeed(btn.getAttribute('data-speed'));
     });
   });
 
-  $('progress-bar-container').addEventListener('click', (e) => {
+  $('progress-bar-container')?.addEventListener('click', (e) => {
+    if (!state.player) return;
     const rect = $('progress-bar-container').getBoundingClientRect();
     const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
     state.player.seek(ratio);
@@ -434,26 +456,30 @@ function init() {
   // MIDI decoding
   $('btn-play-song')?.addEventListener('click', () => {
     if (state.parsedMidiSong) {
-      state.player.loadMidiSong(state.parsedMidiSong);
-      state.player.play();
+      state.player?.loadMidiSong(state.parsedMidiSong);
+      state.player?.play();
       updatePlayerUI();
     }
   });
 
-  setupDropzone($('decode-dropzone'), $('decode-file-input'), async (file) => {
-    try {
-      const buf = await file.arrayBuffer();
-      await processDecodeMidi(new Uint8Array(buf), file.name);
-    } catch (err) {
-      console.error('Failed to decode dropped file:', err);
-      alert('Failed to read file: ' + err.message);
-    }
-  });
+  const decDrop = $('decode-dropzone');
+  const decInput = $('decode-file-input');
+  if (decDrop && decInput) {
+    setupDropzone(decDrop, decInput, async (file) => {
+      try {
+        const buf = await file.arrayBuffer();
+        await processDecodeMidi(new Uint8Array(buf), file.name);
+      } catch (err) {
+        console.error('Failed to decode dropped file:', err);
+        alert('Failed to read file: ' + err.message);
+      }
+    });
+  }
 
-  $('btn-copy-dec-hash').addEventListener('click', () => {
+  $('btn-copy-dec-hash')?.addEventListener('click', () => {
     if (state.recoveredHash) {
       navigator.clipboard.writeText(state.recoveredHash);
-      const label = $('btn-copy-dec-hash').querySelector('.btn-copy-label');
+      const label = $('btn-copy-dec-hash')?.querySelector('.btn-copy-label');
       if (label) {
         label.textContent = 'Copied';
         setTimeout(() => (label.textContent = 'Copy'), 1500);
@@ -461,7 +487,7 @@ function init() {
     }
   });
 
-  $('btn-download-recovered').addEventListener('click', () => {
+  $('btn-download-recovered')?.addEventListener('click', () => {
     if (state.recoveredData && state.recoveredFilename) {
       downloadBlob(state.recoveredData, state.recoveredFilename);
     }
